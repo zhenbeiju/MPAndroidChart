@@ -1,0 +1,93 @@
+Applications Graphics Acceleration Info:
+Uptime: 208303448 Realtime: 547566247
+
+** Graphics info for pid 6670 [com.xxmassdeveloper.mpchartexample] **
+
+Recent DisplayList operations
+            Save
+            ClipRect
+            DrawRenderNode
+              Save
+              ClipRect
+              DrawText
+              RestoreToCount
+            RestoreToCount
+        DrawRenderNode
+          DrawRenderNode
+            DrawRenderNode
+            Save
+            Translate
+            ConcatMatrix
+            Save
+            DrawBitmap
+            RestoreToCount
+    DrawPatch
+  Save
+  DrawBitmap
+  RestoreToCount
+  Save
+  Translate
+  DrawBitmap
+  RestoreToCount
+  Save
+  Translate
+  DrawBitmap
+  RestoreToCount
+  Save
+  Translate
+  DrawBitmap
+  RestoreToCount
+RestoreToCount
+DrawRect
+multiDraw
+  DrawPatch
+multiDraw
+  DrawPatch
+DrawPatch
+DrawPatch
+multiDraw
+  DrawBitmap
+DrawBitmap
+DrawBitmap
+multiDraw
+  DrawBitmap
+multiDraw
+  DrawText
+DrawText
+
+Caches:
+Current memory usage / total memory usage (bytes):
+  TextureCache           276320 / 25165824
+  LayerCache                  0 / 16777216 (numLayers = 0)
+  Layers total          0 (numLayers = 0)
+  RenderBufferCache           0 /  2097152
+  GradientCache               0 /   524288
+  PathCache                   0 / 10485760
+  TessellationCache           0 /  1048576
+  TextDropShadowCache     26640 /  2097152
+  PatchCache               2752 /   131072
+  FontRenderer 0 A8      524288 /   524288
+  FontRenderer 0 RGBA         0 /        0
+  FontRenderer 0 total   524288 /   524288
+Other:
+  FboCache                    0 /        0
+Total memory usage:
+  830000 bytes, 0.79 MB
+
+Profile data in ms:
+
+	com.xxmassdeveloper.mpchartexample/com.xxmassdeveloper.mpchartexample.notimportant.MainActivity/android.view.ViewRootImpl@25f114b7 (visibility=8)
+	com.xxmassdeveloper.mpchartexample/com.xxmassdeveloper.mpchartexample.LineChartActivity1/android.view.ViewRootImpl@187fc424 (visibility=0)
+View hierarchy:
+
+  com.xxmassdeveloper.mpchartexample/com.xxmassdeveloper.mpchartexample.notimportant.MainActivity/android.view.ViewRootImpl@25f114b7
+  61 views, 48.61 kB of display lists
+
+  com.xxmassdeveloper.mpchartexample/com.xxmassdeveloper.mpchartexample.LineChartActivity1/android.view.ViewRootImpl@187fc424
+  21 views, 21.89 kB of display lists
+
+
+Total ViewRootImpl: 2
+Total Views:        82
+Total DisplayList:  70.50 kB
+

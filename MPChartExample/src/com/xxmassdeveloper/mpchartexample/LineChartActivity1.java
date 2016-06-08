@@ -7,10 +7,14 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.BaseAdapter;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -191,7 +195,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
                 break;
             }
             case R.id.actionToggleHighlight: {
-                if(mChart.getData() != null) {
+                if (mChart.getData() != null) {
                     mChart.getData().setHighlightEnabled(!mChart.getData().isHighlightEnabled());
                     mChart.invalidate();
                 }
@@ -237,7 +241,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
                     LineDataSet set = (LineDataSet) iSet;
                     set.setMode(set.getMode() == LineDataSet.Mode.CUBIC_BEZIER
                             ? LineDataSet.Mode.LINEAR
-                            :  LineDataSet.Mode.CUBIC_BEZIER);
+                            : LineDataSet.Mode.CUBIC_BEZIER);
                 }
                 mChart.invalidate();
                 break;
@@ -251,7 +255,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
                     LineDataSet set = (LineDataSet) iSet;
                     set.setMode(set.getMode() == LineDataSet.Mode.STEPPED
                             ? LineDataSet.Mode.LINEAR
-                            :  LineDataSet.Mode.STEPPED);
+                            : LineDataSet.Mode.STEPPED);
                 }
                 mChart.invalidate();
                 break;
@@ -265,7 +269,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
                     LineDataSet set = (LineDataSet) iSet;
                     set.setMode(set.getMode() == LineDataSet.Mode.HORIZONTAL_BEZIER
                             ? LineDataSet.Mode.LINEAR
-                            :  LineDataSet.Mode.HORIZONTAL_BEZIER);
+                            : LineDataSet.Mode.HORIZONTAL_BEZIER);
                 }
                 mChart.invalidate();
                 break;
@@ -335,12 +339,36 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
 
     }
 
-    private void setData(int count, float range) {
+    private void setData(final int count, float range) {
 
-        ArrayList<String> xVals = new ArrayList<String>();
-        for (int i = 0; i < count; i++) {
-            xVals.add((i) + "");
-        }
+//        ArrayList<String> xVals = new ArrayList<String>();
+//        for (int i = 0; i < count; i++) {
+//            xVals.add((i) + "");
+//        }
+        final LayoutInflater inflater = LayoutInflater.from(this);
+        BaseAdapter baseAdapter = new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return count;
+            }
+
+            @Override
+            public Object getItem(int position) {
+                return position;
+            }
+
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                convertView = inflater.inflate(R.layout.list_item, parent,false);
+                Log.e("123 addview", convertView.toString());
+                return convertView;
+            }
+        };
 
         ArrayList<Entry> yVals = new ArrayList<Entry>();
 
@@ -357,9 +385,9 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
 
         if (mChart.getData() != null &&
                 mChart.getData().getDataSetCount() > 0) {
-            set1 = (LineDataSet)mChart.getData().getDataSetByIndex(0);
+            set1 = (LineDataSet) mChart.getData().getDataSetByIndex(0);
             set1.setYVals(yVals);
-            mChart.getData().setXVals(xVals);
+            mChart.getData().setXAdapter(baseAdapter);
             mChart.getData().notifyDataChanged();
             mChart.notifyDataSetChanged();
         } else {
@@ -384,8 +412,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
                 // fill drawable only supported on api level 18 and above
                 Drawable drawable = ContextCompat.getDrawable(this, R.drawable.fade_red);
                 set1.setFillDrawable(drawable);
-            }
-            else {
+            } else {
                 set1.setFillColor(Color.BLACK);
             }
 
@@ -393,7 +420,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
             dataSets.add(set1); // add the datasets
 
             // create a data object with the datasets
-            LineData data = new LineData(xVals, dataSets);
+            LineData data = new LineData(baseAdapter, dataSets);
 
             // set data
             mChart.setData(data);
@@ -410,7 +437,7 @@ public class LineChartActivity1 extends DemoBase implements OnSeekBarChangeListe
         Log.i("Gesture", "END, lastGesture: " + lastPerformedGesture);
 
         // un-highlight values after the gesture is finished and no single-tap
-        if(lastPerformedGesture != ChartTouchListener.ChartGesture.SINGLE_TAP)
+        if (lastPerformedGesture != ChartTouchListener.ChartGesture.SINGLE_TAP)
             mChart.highlightValues(null); // or highlightTouch(null) for callback to onNothingSelected(...)
     }
 

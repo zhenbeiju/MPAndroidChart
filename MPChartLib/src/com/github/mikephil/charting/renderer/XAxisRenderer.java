@@ -1,12 +1,20 @@
 
 package com.github.mikephil.charting.renderer;
 
+import android.annotation.TargetApi;
+import android.database.DataSetObserver;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Path;
 import android.graphics.PointF;
+import android.os.Build;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
@@ -16,20 +24,24 @@ import com.github.mikephil.charting.utils.Transformer;
 import com.github.mikephil.charting.utils.Utils;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class XAxisRenderer extends AxisRenderer {
 
     protected XAxis mXAxis;
+    private ViewGroup viewGroup;
+    private BaseAdapter baseAdapter;
+    private List<View> views;
+
 
     public XAxisRenderer(ViewPortHandler viewPortHandler, XAxis xAxis, Transformer trans) {
         super(viewPortHandler, trans);
-
         this.mXAxis = xAxis;
-
         mAxisLabelPaint.setColor(Color.BLACK);
         mAxisLabelPaint.setTextAlign(Align.CENTER);
         mAxisLabelPaint.setTextSize(Utils.convertDpToPixel(10f));
+
     }
 
     public void computeAxis(float xValMaximumLength, List<String> xValues) {
@@ -72,8 +84,70 @@ public class XAxisRenderer extends AxisRenderer {
         mXAxis.setValues(xValues);
     }
 
+
+    public void computeAxis(final BaseAdapter baseAdapter, final ViewGroup viewGroup) {
+        this.baseAdapter = baseAdapter;
+        this.viewGroup = viewGroup;
+
+        buildVies();
+        baseAdapter.registerDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                buildVies();
+            }
+        });
+    }
+
+    public void buildVies() {
+        int maxX = 0;
+        int maxY = 0;
+        new Handler(viewGroup.getContext().getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if (views != null) {
+                    for (View view : views) {
+                        if (view.getParent() != null) {
+                            Log.e("123 remove", view.toString() + "|" + view.getParent().toString());
+                            ((ViewGroup) view.getParent()).removeView(view);
+                        }
+
+
+                    }
+                }
+
+            }
+        });
+
+        views = new ArrayList<>();
+
+        for (int i = 0; i < baseAdapter.getCount(); i++) {
+            View view = baseAdapter.getView(i, null, viewGroup);
+            views.add(view);
+            Log.e("123 realadd", view.toString());
+            maxX = Math.max(maxX, view.getLayoutParams().width);
+            maxY = Math.max(maxY, view.getLayoutParams().height);
+        }
+
+        final FSize labelRotatedSize = Utils.getSizeOfRotatedRectangleByDegrees(
+                maxX,
+                maxY,
+                mXAxis.getLabelRotationAngle());
+
+        Log.e("123", maxX + "|" + maxY + "|" + labelRotatedSize.width + "|" + labelRotatedSize.height);
+        mXAxis.mLabelWidth = Math.round(10);
+        mXAxis.mLabelHeight = Math.round(10);
+        mXAxis.mLabelRotatedWidth = Math.round(10);
+        mXAxis.mLabelRotatedHeight = Math.round(10);
+        mXAxis.setValues(views);
+        viewGroup.invalidate();
+        viewGroup.requestLayout();
+    }
+
+
     @Override
     public void renderAxisLabels(Canvas c) {
+
 
         if (!mXAxis.isEnabled() || !mXAxis.isDrawLabelsEnabled())
             return;
@@ -85,33 +159,57 @@ public class XAxisRenderer extends AxisRenderer {
         mAxisLabelPaint.setColor(mXAxis.getTextColor());
 
         if (mXAxis.getPosition() == XAxisPosition.TOP) {
-
             drawLabels(c, mViewPortHandler.contentTop() - yoffset,
                     new PointF(0.5f, 1.0f));
 
         } else if (mXAxis.getPosition() == XAxisPosition.TOP_INSIDE) {
-
             drawLabels(c, mViewPortHandler.contentTop() + yoffset + mXAxis.mLabelRotatedHeight,
                     new PointF(0.5f, 1.0f));
 
-        } else if (mXAxis.getPosition() == XAxisPosition.BOTTOM) {
 
+        } else if (mXAxis.getPosition() == XAxisPosition.BOTTOM) {
             drawLabels(c, mViewPortHandler.contentBottom() + yoffset,
                     new PointF(0.5f, 0.0f));
 
-        } else if (mXAxis.getPosition() == XAxisPosition.BOTTOM_INSIDE) {
 
+        } else if (mXAxis.getPosition() == XAxisPosition.BOTTOM_INSIDE) {
             drawLabels(c, mViewPortHandler.contentBottom() - yoffset - mXAxis.mLabelRotatedHeight,
                     new PointF(0.5f, 0.0f));
-
         } else { // BOTH SIDED
-
             drawLabels(c, mViewPortHandler.contentTop() - yoffset,
                     new PointF(0.5f, 1.0f));
             drawLabels(c, mViewPortHandler.contentBottom() + yoffset,
                     new PointF(0.5f, 0.0f));
         }
+
     }
+
+    public void layout() {
+        if (!mXAxis.isEnabled() || !mXAxis.isDrawLabelsEnabled())
+            return;
+
+        float yoffset = mXAxis.getYOffset();
+        float pos = mViewPortHandler.contentTop() - yoffset;
+
+        if (mXAxis.getPosition() == XAxisPosition.TOP) {
+            pos = mViewPortHandler.contentTop() - yoffset;
+
+        } else if (mXAxis.getPosition() == XAxisPosition.TOP_INSIDE) {
+            pos = mViewPortHandler.contentTop() + yoffset + mXAxis.mLabelRotatedHeight;
+
+
+        } else if (mXAxis.getPosition() == XAxisPosition.BOTTOM) {
+            pos = mViewPortHandler.contentBottom() + yoffset;
+
+
+        } else if (mXAxis.getPosition() == XAxisPosition.BOTTOM_INSIDE) {
+            pos = mViewPortHandler.contentBottom() - yoffset - mXAxis.mLabelRotatedHeight;
+        }
+
+        updateAdapterView(pos);
+
+    }
+
 
     @Override
     public void renderAxisLine(Canvas c) {
@@ -139,17 +237,65 @@ public class XAxisRenderer extends AxisRenderer {
         }
     }
 
+    //TODO
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void updateAdapterView(float pos) {
+        if (viewGroup == null || baseAdapter == null) {
+            return;
+        }
+        float[] position = new float[]{
+                0f, 0f
+        };
+
+        for (View view : views) {
+            view.setX(-1000);
+            view.setY(-1000);
+        }
+
+
+        for (int i = mMinX; i <= mMaxX; i += mXAxis.mAxisLabelModulus) {
+
+            View view = views.get(i);
+
+            mTrans.pointValuesToPixel(position);
+
+            if (mXAxis.isAvoidFirstLastClippingEnabled()) {
+
+                // avoid clipping of the last
+                if (i == mXAxis.getValues().size() - 1 && mXAxis.getValues().size() > 1) {
+                    float width = view.getLayoutParams().width;
+
+                    if (width > mViewPortHandler.offsetRight() * 2
+                            && position[0] + width > mViewPortHandler.getChartWidth())
+                        position[0] -= width / 2;
+
+                    // avoid clipping of the first
+                } else if (i == 0) {
+
+                    float width = view.getLayoutParams().width;
+                    position[0] += width / 2;
+                }
+            }
+
+            view.setX(position[0] - view.getLayoutParams().width / 2);
+            view.setY(pos - view.getLayoutParams().height / 2);
+
+        }
+
+    }
+
     /**
      * draws the x-labels on the specified y-position
      *
      * @param pos
      */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     protected void drawLabels(Canvas c, float pos, PointF anchor) {
 
         final float labelRotationAngleDegrees = mXAxis.getLabelRotationAngle();
 
         // pre allocate to save performance (dont allocate in loop)
-        float[] position = new float[] {
+        float[] position = new float[]{
                 0f, 0f
         };
 
@@ -161,7 +307,7 @@ public class XAxisRenderer extends AxisRenderer {
 
             if (mViewPortHandler.isInBoundsX(position[0])) {
 
-                String label = mXAxis.getValues().get(i);
+                String label = mXAxis.getValues().get(i).toString();
 
                 if (mXAxis.isAvoidFirstLastClippingEnabled()) {
 
@@ -182,7 +328,10 @@ public class XAxisRenderer extends AxisRenderer {
                 }
 
                 drawLabel(c, label, i, position[0], pos, anchor, labelRotationAngleDegrees);
+
             }
+
+
         }
     }
 
@@ -198,7 +347,7 @@ public class XAxisRenderer extends AxisRenderer {
             return;
 
         // pre alloc
-        float[] position = new float[] {
+        float[] position = new float[]{
                 0f, 0f
         };
 
@@ -227,26 +376,26 @@ public class XAxisRenderer extends AxisRenderer {
         }
     }
 
-	/**
-	 * Draws the LimitLines associated with this axis to the screen.
-	 *
-	 * @param c
-	 */
-	@Override
-	public void renderLimitLines(Canvas c) {
+    /**
+     * Draws the LimitLines associated with this axis to the screen.
+     *
+     * @param c
+     */
+    @Override
+    public void renderLimitLines(Canvas c) {
 
-		List<LimitLine> limitLines = mXAxis.getLimitLines();
+        List<LimitLine> limitLines = mXAxis.getLimitLines();
 
-		if (limitLines == null || limitLines.size() <= 0)
-			return;
+        if (limitLines == null || limitLines.size() <= 0)
+            return;
 
         float[] position = new float[2];
 
-		for (int i = 0; i < limitLines.size(); i++) {
+        for (int i = 0; i < limitLines.size(); i++) {
 
-			LimitLine l = limitLines.get(i);
+            LimitLine l = limitLines.get(i);
 
-            if(!l.isEnabled())
+            if (!l.isEnabled())
                 continue;
 
             position[0] = l.getLimit();
@@ -256,14 +405,13 @@ public class XAxisRenderer extends AxisRenderer {
 
             renderLimitLineLine(c, l, position);
             renderLimitLineLabel(c, l, position, 2.f + l.getYOffset());
-		}
-	}
+        }
+    }
 
     float[] mLimitLineSegmentsBuffer = new float[4];
     private Path mLimitLinePath = new Path();
 
-    public void renderLimitLineLine(Canvas c, LimitLine limitLine, float[] position)
-    {
+    public void renderLimitLineLine(Canvas c, LimitLine limitLine, float[] position) {
         mLimitLineSegmentsBuffer[0] = position[0];
         mLimitLineSegmentsBuffer[1] = mViewPortHandler.contentTop();
         mLimitLineSegmentsBuffer[2] = position[0];
@@ -281,8 +429,7 @@ public class XAxisRenderer extends AxisRenderer {
         c.drawPath(mLimitLinePath, mLimitLinePaint);
     }
 
-    public void renderLimitLineLabel(Canvas c, LimitLine limitLine, float[] position, float yOffset)
-    {
+    public void renderLimitLineLabel(Canvas c, LimitLine limitLine, float[] position, float yOffset) {
         String label = limitLine.getLabel();
 
         // if drawing the limit-value label is enabled

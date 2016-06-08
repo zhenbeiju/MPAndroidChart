@@ -15,10 +15,10 @@ import java.util.List;
  * 
  * @author Philipp Jahoda
  */
-public class XAxis extends AxisBase {
+public class XAxis<T> extends AxisBase {
 
     /** the arraylist containing all the x-axis labels */
-    protected List<String> mValues = new ArrayList<String>();
+    protected List<T> mValues = new ArrayList<T>();
 
     /**
      * width of the x-axis labels in pixels - this is automatically
@@ -204,7 +204,7 @@ public class XAxis extends AxisBase {
      * 
      * @param values
      */
-    public void setValues(List<String> values) {
+    public void setValues(List<T> values) {
         mValues = values;
     }
 
@@ -213,7 +213,7 @@ public class XAxis extends AxisBase {
      * 
      * @return
      */
-    public List<String> getValues() {
+    public List<T> getValues() {
         return mValues;
     }
 
@@ -246,7 +246,7 @@ public class XAxis extends AxisBase {
         String longest = "";
 
         for (int i = 0; i < mValues.size(); i++) {
-            String text = mValues.get(i);
+            String text = mValues.get(i).toString();
 
             if (longest.length() < text.length())
                 longest = text;

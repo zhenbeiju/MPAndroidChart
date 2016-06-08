@@ -1,6 +1,8 @@
 
 package com.github.mikephil.charting.data;
 
+import android.widget.BaseAdapter;
+
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 import java.util.ArrayList;
@@ -8,7 +10,7 @@ import java.util.List;
 
 /**
  * Data object that encapsulates all data associated with a LineChart.
- * 
+ *
  * @author Philipp Jahoda
  */
 public class LineData extends BarLineScatterCandleBubbleData<ILineDataSet> {
@@ -25,6 +27,10 @@ public class LineData extends BarLineScatterCandleBubbleData<ILineDataSet> {
         super(xVals);
     }
 
+    public LineData(BaseAdapter adapter) {
+        super(adapter);
+    }
+
     public LineData(List<String> xVals, List<ILineDataSet> dataSets) {
         super(xVals, dataSets);
     }
@@ -33,12 +39,20 @@ public class LineData extends BarLineScatterCandleBubbleData<ILineDataSet> {
         super(xVals, dataSets);
     }
 
+    public LineData(BaseAdapter adapter, List<ILineDataSet> dataSets) {
+        super(adapter, dataSets);
+    }
+
     public LineData(List<String> xVals, ILineDataSet dataSet) {
         super(xVals, toList(dataSet));
     }
 
     public LineData(String[] xVals, ILineDataSet dataSet) {
         super(xVals, toList(dataSet));
+    }
+
+    public LineData(BaseAdapter adapter, ILineDataSet dataSet) {
+        super(adapter, toList(dataSet));
     }
 
     private static List<ILineDataSet> toList(ILineDataSet dataSet) {

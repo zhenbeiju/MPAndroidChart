@@ -3,6 +3,7 @@ package com.github.mikephil.charting.data;
 
 import android.graphics.Typeface;
 import android.util.Log;
+import android.widget.BaseAdapter;
 
 import com.github.mikephil.charting.components.YAxis.AxisDependency;
 import com.github.mikephil.charting.formatter.ValueFormatter;
@@ -55,6 +56,9 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
      */
     protected List<String> mXVals;
 
+
+    protected BaseAdapter mXAdapter;
+
     /**
      * array that holds all DataSets the ChartData object represents
      */
@@ -73,6 +77,12 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
      */
     public ChartData(List<String> xVals) {
         this.mXVals = xVals;
+        this.mDataSets = new ArrayList<T>();
+        init();
+    }
+
+    public ChartData(BaseAdapter adapter) {
+        this.mXAdapter = adapter;
         this.mDataSets = new ArrayList<T>();
         init();
     }
@@ -100,9 +110,16 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
     public ChartData(List<String> xVals, List<T> sets) {
         this.mXVals = xVals;
         this.mDataSets = sets;
-
         init();
     }
+
+
+    public ChartData(BaseAdapter adapter, List<T> sets) {
+        this.mXAdapter = adapter;
+        this.mDataSets = sets;
+        init();
+    }
+
 
     /**
      * constructor that takes string array instead of List string
@@ -146,6 +163,9 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
      * calculates the average length (in characters) across all x-value strings
      */
     private void calcXValMaximumLength() {
+        if (mXVals == null) {
+            return;
+        }
 
         if (mXVals.size() <= 0) {
             mXValMaximumLength = 1;
@@ -178,10 +198,18 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
             return;
 
         for (int i = 0; i < mDataSets.size(); i++) {
-            if (mDataSets.get(i).getEntryCount() > mXVals.size()) {
-                throw new IllegalArgumentException(
-                        "One or more of the DataSet Entry arrays are longer than the x-values array of this ChartData object.");
+            if (mXVals != null) {
+                if (mDataSets.get(i).getEntryCount() > mXVals.size()) {
+                    throw new IllegalArgumentException(
+                            "One or more of the DataSet Entry arrays are longer than the x-values array of this ChartData object.");
+                }
+            } else if (mXAdapter != null) {
+                if (mDataSets.get(i).getEntryCount() > mXAdapter.getCount()) {
+                    throw new IllegalArgumentException(
+                            "One or more of the DataSet Entry arrays are longer than the x-values array of this ChartData object.");
+                }
             }
+
         }
     }
 
@@ -376,9 +404,18 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
         return mXVals;
     }
 
+
+    public BaseAdapter getXAdapter() {
+        return mXAdapter;
+    }
+
+
+    public void setXAdapter(BaseAdapter adapter) {
+        mXAdapter = adapter;
+    }
+
     /**
      * sets the x-values the chart represents
-     *
      */
     public void setXVals(List<String> xVals) {
         mXVals = xVals;
@@ -444,7 +481,12 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
      * @return
      */
     public int getXValCount() {
-        return mXVals.size();
+        if (mXVals != null) {
+            return mXVals.size();
+        } else if (mXAdapter != null) {
+            return mXAdapter.getCount();
+        }
+        return 0;
     }
 
     /**
@@ -479,9 +521,9 @@ public abstract class ChartData<T extends IDataSet<? extends Entry>> {
             List<?> entries = mDataSets.get(highlight.getDataSetIndex())
                     .getEntriesForXIndex(highlight.getXIndex());
             for (Object entry : entries)
-                if (((Entry)entry).getVal() == highlight.getValue() ||
+                if (((Entry) entry).getVal() == highlight.getValue() ||
                         Float.isNaN(highlight.getValue()))
-                    return (Entry)entry;
+                    return (Entry) entry;
 
             return null;
         }

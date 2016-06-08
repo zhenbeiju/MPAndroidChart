@@ -15,8 +15,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.Legend.LegendPosition;
 import com.github.mikephil.charting.components.XAxis.XAxisPosition;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.components.YAxis.AxisDependency;
@@ -263,7 +261,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
 
         clipRestoreCount = canvas.save();
         canvas.clipRect(mViewPortHandler.getContentRect());
-        
+
         if (!mXAxis.isDrawLimitLinesBehindDataEnabled())
             mXAxisRenderer.renderLimitLines(canvas);
 
@@ -303,6 +301,12 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
     public void resetTracking() {
         totalTime = 0;
         drawCycles = 0;
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        mXAxisRenderer.layout();
     }
 
     protected void prepareValuePxMatrix() {
@@ -347,7 +351,12 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         mAxisRendererLeft.computeAxis(mAxisLeft.mAxisMinimum, mAxisLeft.mAxisMaximum);
         mAxisRendererRight.computeAxis(mAxisRight.mAxisMinimum, mAxisRight.mAxisMaximum);
 
-        mXAxisRenderer.computeAxis(mData.getXValMaximumLength(), mData.getXVals());
+        if (mData.getXVals() != null) {
+            mXAxisRenderer.computeAxis(mData.getXValMaximumLength(), mData.getXVals());
+        } else if (mData.getXAdapter() != null) {
+            mXAxisRenderer.computeAxis(mData.getXAdapter(), this);
+        }
+
 
         if (mLegend != null)
             mLegendRenderer.computeLegend(mData);
@@ -362,7 +371,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
             mData.calcMinMax(getLowestVisibleXIndex(), getHighestVisibleXIndex());
 
         // calculate / set x-axis range
-        mXAxis.mAxisMaximum = mData.getXVals().size() - 1;
+        mXAxis.mAxisMaximum = mData.getXValCount() - 1;
+
         mXAxis.mAxisRange = Math.abs(mXAxis.mAxisMaximum - mXAxis.mAxisMinimum);
 
         // calculate axis range (min / max) according to provided data
@@ -1372,7 +1382,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
                 mViewPortHandler.contentLeft(), mViewPortHandler.contentBottom()
         };
         getTransformer(AxisDependency.LEFT).pixelsToValue(pts);
-        return (pts[0] <= 0) ? 0 : (int)Math.ceil(pts[0]);
+        return (pts[0] <= 0) ? 0 : (int) Math.ceil(pts[0]);
     }
 
     /**
@@ -1387,7 +1397,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
                 mViewPortHandler.contentRight(), mViewPortHandler.contentBottom()
         };
         getTransformer(AxisDependency.LEFT).pixelsToValue(pts);
-        return Math.min(mData.getXValCount() - 1, (int)Math.floor(pts[0]));
+        return Math.min(mData.getXValCount() - 1, (int) Math.floor(pts[0]));
     }
 
     /**
@@ -1615,7 +1625,7 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            
+
         // Saving current position of chart.
         float[] pts = new float[2];
         if (mKeepPositionOnRotation) {

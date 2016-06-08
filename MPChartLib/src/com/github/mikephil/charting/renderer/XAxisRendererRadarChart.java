@@ -42,7 +42,7 @@ public class XAxisRendererRadarChart extends XAxisRenderer {
 
         int mod = mXAxis.mAxisLabelModulus;
         for (int i = 0; i < mXAxis.getValues().size(); i += mod) {
-            String label = mXAxis.getValues().get(i);
+            String label = mXAxis.getValues().get(i).toString();
 
             float angle = (sliceangle * i + mChart.getRotationAngle()) % 360f;
 
@@ -54,13 +54,13 @@ public class XAxisRendererRadarChart extends XAxisRenderer {
         }
     }
 
-	/**
-	 * XAxis LimitLines on RadarChart not yet supported.
-	 *
-	 * @param c
-	 */
-	@Override
-	public void renderLimitLines(Canvas c) {
-		// this space intentionally left blank
-	}
+    /**
+     * XAxis LimitLines on RadarChart not yet supported.
+     *
+     * @param c
+     */
+    @Override
+    public void renderLimitLines(Canvas c) {
+        // this space intentionally left blank
+    }
 }

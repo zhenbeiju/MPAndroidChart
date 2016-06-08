@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.LogManager;
 
 /**
  * Baseclass of all Chart-Views.
@@ -612,7 +613,7 @@ public abstract class Chart<T extends ChartData<? extends IDataSet<? extends Ent
                 high = null;
             } else {
                 if (this instanceof BarLineChartBase
-                        && ((BarLineChartBase)this).isHighlightFullBarEnabled())
+                        && ((BarLineChartBase) this).isHighlightFullBarEnabled())
                     high = new Highlight(high.getXIndex(), Float.NaN, -1, -1, -1);
 
                 // set the indices to highlight
@@ -683,9 +684,9 @@ public abstract class Chart<T extends ChartData<? extends IDataSet<? extends Ent
             int xIndex = highlight.getXIndex();
             int dataSetIndex = highlight.getDataSetIndex();
 
-            float deltaX = mXAxis != null 
-                ? mXAxis.mAxisRange
-                : ((mData == null ? 0.f : mData.getXValCount()) - 1.f);
+            float deltaX = mXAxis != null
+                    ? mXAxis.mAxisRange
+                    : ((mData == null ? 0.f : mData.getXValCount()) - 1.f);
 
             if (xIndex <= deltaX && xIndex <= deltaX * mAnimator.getPhaseX()) {
 
@@ -1676,23 +1677,53 @@ public abstract class Chart<T extends ChartData<? extends IDataSet<? extends Ent
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-
         for (int i = 0; i < getChildCount(); i++) {
-            getChildAt(i).layout(left, top, right, bottom);
+            View child = getChildAt(i);
+            ViewGroup.LayoutParams lp =
+                    (ViewGroup.LayoutParams) child.getLayoutParams();
+
+            int childLeft = lp.width;
+            int childTop = lp.height;
+            Log.e("123 layout ", childLeft + "|" + childTop + "|" + child.getWidth() + "|" + child.getHeight());
+            child.layout(0, 0,
+                    lp.width, lp.height);
         }
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        Log.e("123", "onMeasure" + widthMeasureSpec + "" + heightMeasureSpec);
         int size = (int) Utils.convertDpToPixel(50f);
+        int count = getChildCount();
+        int maxHeight = 0;
+        int maxWidth = 0;
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() != GONE) {
+                int childRight;
+                int childBottom;
+
+                ViewGroup.LayoutParams lp
+                        = (ViewGroup.LayoutParams) child.getLayoutParams();
+
+                childRight = (int) (child.getX() + child.getMeasuredWidth());
+                childBottom = (int) (child.getY() + child.getMeasuredHeight());
+
+                maxWidth = Math.max(maxWidth, childRight);
+                maxHeight = Math.max(maxHeight, childBottom);
+            }
+        }
+
         setMeasuredDimension(
-                Math.max(getSuggestedMinimumWidth(),
+                Math.max(maxWidth, Math.max(getSuggestedMinimumWidth(),
                         resolveSize(size,
-                                widthMeasureSpec)),
-                Math.max(getSuggestedMinimumHeight(),
+                                widthMeasureSpec))),
+                Math.max(maxHeight, Math.max(getSuggestedMinimumHeight(),
                         resolveSize(size,
-                                heightMeasureSpec)));
+                                heightMeasureSpec))));
+
+
     }
 
     @Override
